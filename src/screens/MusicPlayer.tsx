@@ -1,5 +1,12 @@
-import React, {useState} from 'react';
-import {Dimensions, FlatList, Image, StyleSheet, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import TrackPlayer, {
   Event,
@@ -11,45 +18,64 @@ import SongInfo from '../components/SongInfo';
 import SongSlider from '../components/SongSlider';
 import ControlCenter from '../components/ControlCenter';
 // import Image from '../assets/images/';
+import SystemSetting from 'react-native-system-setting';
 
 const {width} = Dimensions.get('window');
 
 const MusicPlayer = () => {
   const [track, setTrack] = useState<Track | null>();
-  console.log('track', track);
+  const [queue, setQueue] = useState([]);
+  async function loadPlaylist() {
+    const queue = await TrackPlayer.getQueue();
+    setQueue(queue);
+  }
 
+  useEffect(() => {
+    loadPlaylist();
+  }, []);
   useTrackPlayerEvents([Event.PlaybackActiveTrackChanged], async event => {
-    // switch (event.type) {
-    //   case Event.PlaybackActiveTrackChanged:
-    //     if (event.index) {
-    //       const playingTrack = await TrackPlayer.getTrack(event.index);
-    //       setTrack(playingTrack);
-    //     }
-    //     break;
-    // }
-    if (
-      event.type === Event.PlaybackActiveTrackChanged &&
-      event.index != null
-    ) {
-      const track = await TrackPlayer.getTrack(event.index);
-      // const {title} = track || {};
-      setTrack(track);
+    switch (event.type) {
+      case Event.PlaybackActiveTrackChanged:
+        const playingTrack = await TrackPlayer.getTrack(event.index);
+        setTrack(playingTrack);
+        break;
     }
   });
+  // switch (event.type) {
+  //   case Event.PlaybackActiveTrackChanged:
+  //     if (
+  //       // event.type === Event.PlaybackActiveTrackChanged &&
+  //       event.index
+  //       // != null
+  //     ) {
+  //       const track = await TrackPlayer.getTrack(event.index);
+  //       // const {title} = track || {};
+  //       setTrack(track);
+  //     }
+  // }
 
   const renderArtWork = (track: any) => {
-    console.log('img', track.item.artwork);
-    // const img = require(`../assets/images/${track.item.artwork}`);
-    const img = `../assets/images/${'one.png'}`;
+    const img = track?.item?.artwork;
     return (
       <View style={styles.listArtWrapper}>
         <View style={styles.albumContainer}>
-          {img && <Image style={styles.albumArtImg} source={require(img)} />}
+          {img ? (
+            <Image style={styles.albumArtImg} source={{uri: img}} />
+          ) : (
+            <Text>No Image</Text>
+          )}
         </View>
       </View>
     );
   };
+  async function handleShuffle() {
+    let queue = await TrackPlayer.getQueue();
+    await TrackPlayer.reset();
+    queue.sort(() => Math.random() - 0.5);
+    await TrackPlayer.add(queue);
 
+    loadPlaylist();
+  }
   return (
     <View style={styles.container}>
       <FlatList
@@ -61,7 +87,7 @@ const MusicPlayer = () => {
 
       <SongInfo track={track} />
       <SongSlider />
-      <ControlCenter />
+      <ControlCenter onShuffle={handleShuffle} />
     </View>
   );
 };

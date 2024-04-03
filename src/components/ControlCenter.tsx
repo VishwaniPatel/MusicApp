@@ -1,12 +1,13 @@
 import React from 'react';
-import {View, StyleSheet, Pressable} from 'react-native';
+import {View, StyleSheet, Pressable, Text} from 'react-native';
 import TrackPlayer, {State, usePlaybackState} from 'react-native-track-player';
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import {playbackService} from '../../musicPlayerServices';
+import SystemSetting from 'react-native-system-setting';
 
-const ControlCenter = () => {
+const ControlCenter = ({onShuffle}: any) => {
   const playBackState = usePlaybackState();
   console.log(playBackState);
 
@@ -33,6 +34,14 @@ const ControlCenter = () => {
 
   return (
     <View style={styles.container}>
+      <Pressable
+        onPress={() => {
+          SystemSetting.getVolume().then((vol: number) => {
+            SystemSetting.setVolume(vol - 0.1);
+          });
+        }}>
+        <Icon style={styles.icon} name="remove" size={40} />
+      </Pressable>
       <Pressable onPress={skipToPrevious}>
         <Icon style={styles.icon} name="skip-previous" size={40} />
       </Pressable>
@@ -45,6 +54,17 @@ const ControlCenter = () => {
       </Pressable>
       <Pressable onPress={skipToNext}>
         <Icon style={styles.icon} name="skip-next" size={40} />
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          SystemSetting.getVolume().then((vol: number) => {
+            SystemSetting.setVolume(vol + 0.1);
+          });
+        }}>
+        <Icon style={styles.icon} name="add" size={40} />
+      </Pressable>
+      <Pressable onPress={onShuffle}>
+        <Icon style={styles.icon} name="shuffle" size={40} />
       </Pressable>
     </View>
   );
